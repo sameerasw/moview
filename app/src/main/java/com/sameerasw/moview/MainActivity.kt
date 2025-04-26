@@ -144,7 +144,7 @@ class MainActivity : ComponentActivity() {
                 } else {
                     val colonIndex = trimmedLine.indexOf(':')
                     if (colonIndex != -1) {
-                        //key - valuue
+                        //key - value
                         if (currentKey != null && currentValue.isNotEmpty()) {
                             currentMovieData[currentKey] = currentValue.toString().trim().removeSurrounding("\"")
                         }
