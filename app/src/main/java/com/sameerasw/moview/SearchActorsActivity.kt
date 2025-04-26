@@ -3,18 +3,28 @@ package com.sameerasw.moview
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.sameerasw.moview.data.Movie
+import com.sameerasw.moview.data.MovieDatabase
 import com.sameerasw.moview.ui.theme.MoviewTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SearchActorsActivity : ComponentActivity() {
+
+    private val movieDao by lazy {
+        MovieDatabase.getDatabase(applicationContext).movieDao()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -23,27 +33,85 @@ class SearchActorsActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    SearchActorsScreen()
+                    // Pass the DAO search function, lambdda func
+                    SearchActorsScreen { actorName ->
+                        findMoviesByActorSuspend(actorName)
+                    }
                 }
+            }
+        }
+    }
+
+    // call DAO on IO thread
+    private suspend fun findMoviesByActorSuspend(actorName: String): List<Movie> {
+        return withContext(Dispatchers.IO) {
+            movieDao.findMoviesByActor(actorName)
+        }
+    }
+}
+
+@Composable
+fun SearchActorsScreen(
+    // Function lambda
+    searchAction: suspend (String) -> List<Movie>
+) {
+    var searchText by rememberSaveable { mutableStateOf("") }
+    var moviesResult by remember { mutableStateOf<List<Movie>>(emptyList()) }
+    var searchPerformed by rememberSaveable { mutableStateOf(false) }
+
+    val composableScope = rememberCoroutineScope()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = { searchText = it },
+                label = { Text("Actor Name") },
+                modifier = Modifier.weight(1f),
+                singleLine = true
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(onClick = {
+                searchPerformed = true
+                composableScope.launch {
+                    moviesResult = searchAction(searchText)
+                }
+            }) {
+                Text("Search")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Display results
+        if (searchPerformed) {
+            if (moviesResult.isNotEmpty()) {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(moviesResult) { movie ->
+                        MovieActorItem(movie = movie)
+                    }
+                }
+            } else {
+                // not found
+                Text("No movies found for '$searchText'")
             }
         }
     }
 }
 
 @Composable
-fun SearchActorsScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Search Actors Screen Placeholder")
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SearchActorsScreenPreview() {
-    MoviewTheme {
-        SearchActorsScreen()
+fun MovieActorItem(movie: Movie) {
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        Text(text = movie.title ?: "No Title", style = MaterialTheme.typography.titleMedium)
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(text = "Year: ${movie.year ?: "N/A"}")
+        Text(text = "Actors: ${movie.actors ?: "N/A"}")
     }
 }

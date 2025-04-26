@@ -236,9 +236,11 @@ fun MainScreen(onAddMoviesClicked: () -> Unit) {
         }) {
             Text("Search for Actors")
         }
-        // TODO: Task 7
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { /* TODO: Implement Task 7 action */ }) {
+        Button(onClick = {
+            val intent = Intent(context, SearchTitleWebActivity::class.java)
+            context.startActivity(intent)
+        }) {
             Text("Search Title (Web)")
         }
     }
