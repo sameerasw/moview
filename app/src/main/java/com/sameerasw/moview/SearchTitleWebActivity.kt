@@ -145,6 +145,9 @@ fun SearchTitleWebScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(WindowInsets.systemBars
+                .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+                .asPaddingValues())
             .padding(16.dp)
     ) {
         Row(
