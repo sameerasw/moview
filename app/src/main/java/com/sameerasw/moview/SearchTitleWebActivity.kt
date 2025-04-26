@@ -35,7 +35,7 @@ data class WebSearchResult(
 
 class SearchTitleWebActivity : ComponentActivity() {
 
-    private val apiKey = "19b1fdf9" // API keyy
+    private val apiKey = "19b1fdf9" // API key
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
