@@ -32,7 +32,10 @@
             android:name=".SearchActorsActivity"
             android:exported="true"
             android:theme="@style/Theme.Moview" />
-        
+        <activity
+            android:name=".SearchTitleWebActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Moview" />
     </application>
 
 </manifest>
