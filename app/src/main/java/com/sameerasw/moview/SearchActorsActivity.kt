@@ -52,11 +52,10 @@ class SearchActorsActivity : ComponentActivity() {
 
 @Composable
 fun SearchActorsScreen(
-    // Function lambda
     searchAction: suspend (String) -> List<Movie>
 ) {
     var searchText by rememberSaveable { mutableStateOf("") }
-    var moviesResult by remember { mutableStateOf<List<Movie>>(emptyList()) }
+    var moviesResult by rememberSaveable { mutableStateOf<List<Movie>>(emptyList()) }
     var searchPerformed by rememberSaveable { mutableStateOf(false) }
 
     val composableScope = rememberCoroutineScope()

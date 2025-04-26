@@ -135,9 +135,9 @@ fun SearchTitleWebScreen(
     searchAction: suspend (String) -> Result<List<WebSearchResult>>
 ) {
     var searchText by rememberSaveable { mutableStateOf("") }
-    var searchResults by remember { mutableStateOf<List<WebSearchResult>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var searchResults by rememberSaveable { mutableStateOf<List<WebSearchResult>>(emptyList()) }
+    var isLoading by rememberSaveable { mutableStateOf(false) }
+    var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
     var searchPerformed by rememberSaveable { mutableStateOf(false) }
 
     val composableScope = rememberCoroutineScope()
@@ -204,7 +204,6 @@ fun SearchTitleWebScreen(
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(searchResults) { result ->
                         SearchResultItem(result = result)
-                        Divider()
                     }
                 }
             }
