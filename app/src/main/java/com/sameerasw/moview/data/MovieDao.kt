@@ -3,13 +3,13 @@ package com.sameerasw.moview.data
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
-import androidx.room.Query // Import Query
+import androidx.room.Query
 
 @Dao
 interface MovieDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMovies(movies: List<Movie>) // suspend for coroutines
+    suspend fun insertMovies(movies: List<Movie>)
 
     @Query("SELECT * FROM movies WHERE LOWER(actors) LIKE '%' || LOWER(:actorName) || '%'")
     suspend fun findMoviesByActor(actorName: String): List<Movie>

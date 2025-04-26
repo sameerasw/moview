@@ -2,7 +2,7 @@ package com.sameerasw.moview
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast // Import Toast
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -22,13 +22,19 @@ import com.sameerasw.moview.ui.theme.MoviewTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
 
 class MainActivity : ComponentActivity() {
 
-    //  initialize the database
     private val movieDao by lazy {
         MovieDatabase.getDatabase(applicationContext).movieDao()
     }
+
+    // URL specified
+    private val moviesDataUrl = "https://ddracopo.github.io/DOCUM/courses/5cosc023w/movies.txt"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,59 +54,159 @@ class MainActivity : ComponentActivity() {
 
     private fun addInitialMoviesToDb() {
         lifecycleScope.launch {
-            val moviesToAdd = listOf(
-                Movie(
-                    imdbID = "tt0111161", // Primary Key
-                    title = "The Shawshank Redemption",
-                    year = "1994",
-                    rated = "R",
-                    released = "14 Oct 1994",
-                    runtime = "142 min",
-                    genre = "Drama",
-                    director = "Frank Darabont",
-                    writer = "Stephen King, Frank Darabont",
-                    actors = "Tim Robbins, Morgan Freeman, Bob Gunton",
-                    plot = "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.",
-                    poster = "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_SX300.jpg", // Poster URL
-                    imdbRating = "9.3",
-                    type = "movie"
-                ),
-                Movie(
-                    imdbID = "tt0068646",
-                    title = "The Godfather",
-                    year = "1972",
-                    rated = "R",
-                    released = "24 Mar 1972",
-                    runtime = "175 min",
-                    genre = "Crime, Drama",
-                    director = "Francis Ford Coppola",
-                    writer = "Mario Puzo, Francis Ford Coppola",
-                    actors = "Marlon Brando, Al Pacino, James Caan",
-                    plot = "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.",
-                    poster = "https://m.media-amazon.com/images/M/MV5BM2MyNjYxNmUtYTAwNi00MTYxLWJmNWYtYzZlODY3ZTk3OTFlXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX300.jpg",
-                    imdbRating = "9.2",
-                    type = "movie"
-                )
-            )
-
             try {
-                // ddb insertion on a background thread (IO Dispatcher)
-                withContext(Dispatchers.IO) {
-                    movieDao.insertMovies(moviesToAdd)
-                }
-                Toast.makeText(this@MainActivity, "Movies added to DB", Toast.LENGTH_SHORT).show()
-                println("Successfully added ${moviesToAdd.size} movies to DB.")
+                val moviesToAdd = fetchAndParseMovies(moviesDataUrl)
 
-                val allMovies = withContext(Dispatchers.IO) { movieDao.getAllMovies() }
-                println("Current movies in DB: ${allMovies.size}")
+                if (moviesToAdd.isNotEmpty()) {
+                    // Insert into DB on IO thread
+                    withContext(Dispatchers.IO) {
+                        movieDao.insertMovies(moviesToAdd)
+                    }
+                    // Show success message on Main thread
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "${moviesToAdd.size} Movies added to DB",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    println("Successfully added ${moviesToAdd.size} movies to DB.")
+
+                    val allMovies = withContext(Dispatchers.IO) { movieDao.getAllMovies() }
+                    println("Current movies in DB: ${allMovies.size}")
+
+                } else {
+                    // Show error
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "No movies found or error fetching data.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                    println("No movies parsed or error fetching data.")
+                }
 
             } catch (e: Exception) {
+                // Show error message on Main thread
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "Error adding movies: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_LONG)
+                        .show()
                 }
-                println("Error adding movies to DB: ${e.message}")
+                println("Error during movie fetch/DB operation: ${e.message}")
+                e.printStackTrace()
             }
         }
+    }
+
+    private suspend fun fetchAndParseMovies(urlString: String): List<Movie> = withContext(Dispatchers.IO) {
+        val movies = mutableListOf<Movie>()
+        var connection: HttpURLConnection? = null
+        var reader: BufferedReader? = null
+        val currentMovieData = mutableMapOf<String, String>()
+        var currentKey: String? = null
+        val currentValue = StringBuilder()
+
+        try {
+            val url = URL(urlString)
+            connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 15000
+            connection.readTimeout = 10000
+            connection.connect()
+
+            val inputStream = connection.inputStream
+            reader = BufferedReader(InputStreamReader(inputStream))
+            var line: String?
+
+            while (reader.readLine().also { line = it } != null) {
+                val trimmedLine = line!!.trim()
+
+                if (trimmedLine.isEmpty()) {
+                    if (currentKey != null && currentValue.isNotEmpty()) {
+                        currentMovieData[currentKey!!] = currentValue.toString().trim().removeSurrounding("\"")
+                    }
+
+                    if (currentMovieData.isNotEmpty()) {
+                        try {
+                            println("Attempting to create movie from map: $currentMovieData")
+                            val movie = createMovieFromMap(currentMovieData)
+                            movies.add(movie)
+                            println("Successfully created movie: ${movie.title}")
+                        } catch (e: Exception) {
+                            println("Error creating movie from map: ${e.message} - Data: $currentMovieData")
+                        }
+                        currentMovieData.clear()
+                    }
+                    currentKey = null
+                    currentValue.clear()
+
+                } else {
+                    val colonIndex = trimmedLine.indexOf(':')
+                    if (colonIndex != -1) {
+                        //key - valuue
+                        if (currentKey != null && currentValue.isNotEmpty()) {
+                            currentMovieData[currentKey!!] = currentValue.toString().trim().removeSurrounding("\"")
+                        }
+
+                        currentKey = trimmedLine.substring(0, colonIndex).trim().removeSurrounding("\"")
+                        currentValue.clear()
+                        currentValue.append(trimmedLine.substring(colonIndex + 1).trim())
+
+                    } else {
+                        if (currentKey != null) {
+                            if (currentValue.isNotEmpty()) currentValue.append(" ")
+                            currentValue.append(trimmedLine)
+                        } else {
+                            println("Skipping line with no colon and no current key: $trimmedLine")
+                        }
+                    }
+                }
+            }
+
+            if (currentKey != null && currentValue.isNotEmpty()) {
+                currentMovieData[currentKey!!] = currentValue.toString().trim().removeSurrounding("\"")
+            }
+            if (currentMovieData.isNotEmpty()) {
+                try {
+                    println("Attempting to create LAST movie from map: $currentMovieData")
+                    val movie = createMovieFromMap(currentMovieData)
+                    movies.add(movie)
+                    println("Successfully created LAST movie: ${movie.title}")
+                } catch (e: Exception) {
+                    println("Error creating LAST movie from map: ${e.message} - Data: $currentMovieData")
+                }
+            }
+
+        } catch (e: Exception) {
+            println("Error during network fetch or reading: ${e.message}")
+            e.printStackTrace()
+            return@withContext emptyList<Movie>()
+        } finally {
+            reader?.close()
+            connection?.disconnect()
+        }
+        println("Finished Parsing. Total movies parsed successfully: ${movies.size}")
+        return@withContext movies
+    }
+
+    private fun createMovieFromMap(data: Map<String, String>): Movie {
+        val imdbIDValue = data["imdbID"]
+        return Movie(
+            title = data["Title"],
+            year = data["Year"],
+            rated = data["Rated"],
+            released = data["Released"],
+            runtime = data["Runtime"],
+            genre = data["Genre"],
+            director = data["Director"],
+            writer = data["Writer"],
+            actors = data["Actors"],
+            plot = data["Plot"],
+            poster = data["Poster"],
+            imdbRating = data["imdbRating"],
+            type = data["Type"]
+        )
     }
 }
 
@@ -131,6 +237,10 @@ fun MainScreen(onAddMoviesClicked: () -> Unit) {
         }) {
             Text("Search for Actors")
         }
-        // Task 7 Button
+        // TODO: Task 7
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = { /* TODO: Implement Task 7 action */ }) {
+            Text("Search Title (Web)")
+        }
     }
 }
