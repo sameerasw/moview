@@ -124,7 +124,7 @@ class MainActivity : ComponentActivity() {
 
                 if (trimmedLine.isEmpty()) {
                     if (currentKey != null && currentValue.isNotEmpty()) {
-                        currentMovieData[currentKey!!] = currentValue.toString().trim().removeSurrounding("\"")
+                        currentMovieData[currentKey] = currentValue.toString().trim().removeSurrounding("\"")
                     }
 
                     if (currentMovieData.isNotEmpty()) {
@@ -146,7 +146,7 @@ class MainActivity : ComponentActivity() {
                     if (colonIndex != -1) {
                         //key - valuue
                         if (currentKey != null && currentValue.isNotEmpty()) {
-                            currentMovieData[currentKey!!] = currentValue.toString().trim().removeSurrounding("\"")
+                            currentMovieData[currentKey] = currentValue.toString().trim().removeSurrounding("\"")
                         }
 
                         currentKey = trimmedLine.substring(0, colonIndex).trim().removeSurrounding("\"")
@@ -165,7 +165,7 @@ class MainActivity : ComponentActivity() {
             }
 
             if (currentKey != null && currentValue.isNotEmpty()) {
-                currentMovieData[currentKey!!] = currentValue.toString().trim().removeSurrounding("\"")
+                currentMovieData[currentKey] = currentValue.toString().trim().removeSurrounding("\"")
             }
             if (currentMovieData.isNotEmpty()) {
                 try {
@@ -191,7 +191,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun createMovieFromMap(data: Map<String, String>): Movie {
-        val imdbIDValue = data["imdbID"]
         return Movie(
             title = data["Title"],
             year = data["Year"],
