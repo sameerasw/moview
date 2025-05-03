@@ -138,11 +138,9 @@ fun SearchMoviesScreen(
     searchAction: suspend (String) -> Result<Movie>,
     saveAction: suspend (Movie) -> Boolean
 ) {
-    // Only keep the search text in rememberSaveable
     var searchText by rememberSaveable { mutableStateOf("") }
-    var lastSearchedTerm by rememberSaveable { mutableStateOf("") }
+    var lastSearchedTerm by rememberSaveable { mutableStateOf("") } // saved to refetch after rotation
 
-    // These states don't need to be saved
     var movieDetails by remember { mutableStateOf<Movie?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -150,7 +148,7 @@ fun SearchMoviesScreen(
     val composableScope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    // Effect to re-fetch data on configuration changes if we have a previous search
+    // Effect to re-fetch data
     LaunchedEffect(Unit) {
         if (lastSearchedTerm.isNotBlank()) {
             isLoading = true

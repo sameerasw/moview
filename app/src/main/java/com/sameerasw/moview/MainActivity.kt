@@ -6,11 +6,17 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -45,7 +51,8 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     MainScreen(
-                        onAddMoviesClicked = { addInitialMoviesToDb() }
+                        onAddMoviesClicked = { addInitialMoviesToDb() },
+                        onClearDatabaseClicked = { clearMoviesDatabase() }
                     )
                 }
             }
@@ -94,6 +101,33 @@ class MainActivity : ComponentActivity() {
                         .show()
                 }
                 println("Error during movie fetch/DB operation: ${e.message}")
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun clearMoviesDatabase() {
+        lifecycleScope.launch {
+            try {
+                // Delete all movies
+                withContext(Dispatchers.IO) {
+                    movieDao.deleteAllMovies()
+                }
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Movie database cleared",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                println("Successfully cleared the movie database")
+            } catch (e: Exception) {
+                // Show error
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_LONG)
+                        .show()
+                }
+                println("Error clearing database: ${e.message}")
                 e.printStackTrace()
             }
         }
@@ -210,41 +244,87 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(onAddMoviesClicked: () -> Unit) {
-    Column(
+fun MainScreen(onAddMoviesClicked: () -> Unit, onClearDatabaseClicked: () -> Unit) {
+    var showConfirmDialog by remember { mutableStateOf(false) }
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(WindowInsets.systemBars
                 .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
                 .asPaddingValues())
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(16.dp)
     ) {
-        Button(onClick = onAddMoviesClicked) {
-            Text("Add Movies to DB")
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Button(onClick = onAddMoviesClicked) {
+                Text("Add Movies to DB")
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            val context = LocalContext.current
+            Button(onClick = {
+                val intent = Intent(context, SearchMoviesActivity::class.java)
+                context.startActivity(intent)
+            }) {
+                Text("Search for Movies")
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = {
+                val intent = Intent(context, SearchActorsActivity::class.java)
+                context.startActivity(intent)
+            }) {
+                Text("Search for Actors")
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = {
+                val intent = Intent(context, SearchTitleWebActivity::class.java)
+                context.startActivity(intent)
+            }) {
+                Text("Search Title (Web)")
+            }
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        val context = LocalContext.current
-        Button(onClick = {
-            val intent = Intent(context, SearchMoviesActivity::class.java)
-            context.startActivity(intent)
-        }) {
-            Text("Search for Movies")
+
+        Button(
+            onClick = { showConfirmDialog = true },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer
+            )
+        ) {
+            Text("Reset Database")
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {
-            val intent = Intent(context, SearchActorsActivity::class.java)
-            context.startActivity(intent)
-        }) {
-            Text("Search for Actors")
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {
-            val intent = Intent(context, SearchTitleWebActivity::class.java)
-            context.startActivity(intent)
-        }) {
-            Text("Search Title (Web)")
+
+        if (showConfirmDialog) {
+            AlertDialog(
+                onDismissRequest = { showConfirmDialog = false },
+                title = { Text("Confirm Reset") },
+                text = { Text("Are you sure you want to clear all movies from the database? This action cannot be undone.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            onClearDatabaseClicked()
+                            showConfirmDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    ) {
+                        Text("Reset")
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = { showConfirmDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }
