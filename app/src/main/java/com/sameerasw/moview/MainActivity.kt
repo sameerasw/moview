@@ -1,6 +1,7 @@
 package com.sameerasw.moview
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -178,7 +179,7 @@ class MainActivity : ComponentActivity() {
                 } else {
                     val colonIndex = trimmedLine.indexOf(':')
                     if (colonIndex != -1) {
-                        //key - value
+                        //key - valuue
                         if (currentKey != null && currentValue.isNotEmpty()) {
                             currentMovieData[currentKey] = currentValue.toString().trim().removeSurrounding("\"")
                         }
@@ -246,6 +247,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(onAddMoviesClicked: () -> Unit, onClearDatabaseClicked: () -> Unit) {
     var showConfirmDialog by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -285,6 +287,11 @@ fun MainScreen(onAddMoviesClicked: () -> Unit, onClearDatabaseClicked: () -> Uni
             }) {
                 Text("Search Title (Web)")
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = { showAboutDialog = true }) {
+                Text("About")
+            }
         }
 
         Button(
@@ -322,6 +329,40 @@ fun MainScreen(onAddMoviesClicked: () -> Unit, onClearDatabaseClicked: () -> Uni
                 dismissButton = {
                     Button(onClick = { showConfirmDialog = false }) {
                         Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        if (showAboutDialog) {
+            val context = LocalContext.current
+            AlertDialog(
+                onDismissRequest = { showAboutDialog = false },
+                title = { Text("About Moview") },
+                text = {
+                    Text(
+                        "Developed by Sameera Wijerathna.\n\n" +
+                                "Moview is a movie database application that allows users to search and save movie information. " +
+                                "The app uses the OMDb API to fetch movie details.\n\n" +
+                                "I confirm that I understand what plagiarism is and have read and " +
+                                "understood the section on Assessment Offences in the Essential Information for Students. " +
+                                "The work that I have submitted is entirely my own. Any work from other authors " +
+                                "is duly referenced and acknowledged.",
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
+                },
+                dismissButton = {
+                    Button(onClick = {
+                        val githubUrl = "https://github.com/sameerasw"
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
+                        context.startActivity(intent)
+                    }) {
+                        Text("GitHub")
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = { showAboutDialog = false }) {
+                        Text("OK")
                     }
                 }
             )
