@@ -11,6 +11,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -287,24 +288,30 @@ fun MainScreen(onAddMoviesClicked: () -> Unit, onClearDatabaseClicked: () -> Uni
             }) {
                 Text("Search Title (Web)")
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = { showAboutDialog = true }) {
-                Text("About")
-            }
         }
 
-        Button(
-            onClick = { showConfirmDialog = true },
+        Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
+                .fillMaxWidth()
                 .padding(bottom = 16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer,
-                contentColor = MaterialTheme.colorScheme.onErrorContainer
-            )
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Reset Database")
+            Button(
+                onClick = { showConfirmDialog = true },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                )
+            ) {
+                Text("Reset Database")
+            }
+
+            OutlinedButton(
+                onClick = { showAboutDialog = true }
+            ) {
+                Text("About")
+            }
         }
 
         if (showConfirmDialog) {
