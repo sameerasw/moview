@@ -34,6 +34,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import com.sameerasw.moview.components.MoviePoster
 import com.sameerasw.moview.components.SearchField
+import com.sameerasw.moview.components.SearchStateDisplay
 import com.sameerasw.moview.utils.ImageLoader
 
 // to hold search results
@@ -195,30 +196,20 @@ fun SearchTitleWebScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        when {
-            isLoading -> {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+        if (searchResults.isNotEmpty()) {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(searchResults) { result ->
+                    SearchResultItem(result = result)
                 }
             }
-            errorMessage != null -> {
-                Text(
-                    text = "Error: $errorMessage",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-            searchPerformed && searchResults.isEmpty() -> {
-                // Empty
-                Text("No results found for '$searchText'.")
-            }
-            searchResults.isNotEmpty() -> {
-                // Display Results
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(searchResults) { result ->
-                        SearchResultItem(result = result)
-                    }
-                }
-            }
+        } else {
+            SearchStateDisplay(
+                isLoading = isLoading,
+                errorMessage = errorMessage,
+                emptySearchMessage = "Search for movies online by title keywords",
+                searchPerformed = searchPerformed,
+                hasResults = searchResults.isNotEmpty()
+            )
         }
     }
 }

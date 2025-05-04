@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.sameerasw.moview.components.MoviePoster
 import com.sameerasw.moview.components.SearchField
+import com.sameerasw.moview.components.SearchStateDisplay
 import com.sameerasw.moview.data.Movie
 import com.sameerasw.moview.data.MovieDatabase
 import com.sameerasw.moview.ui.theme.MoviewTheme
@@ -146,6 +147,7 @@ fun SearchMoviesScreen(
     var movieDetails by remember { mutableStateOf<Movie?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var searchPerformed by remember { mutableStateOf(false) }
 
     val composableScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -159,6 +161,7 @@ fun SearchMoviesScreen(
 
             val result = searchAction(lastSearchedTerm)
             isLoading = false
+            searchPerformed = true
             result.onSuccess { movie ->
                 movieDetails = movie
             }.onFailure { error ->
@@ -179,6 +182,7 @@ fun SearchMoviesScreen(
             composableScope.launch {
                 val result = searchAction(searchText)
                 isLoading = false
+                searchPerformed = true
                 result.onSuccess { movie ->
                     movieDetails = movie
                 }.onFailure { error ->
@@ -212,21 +216,6 @@ fun SearchMoviesScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (isLoading) {
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        if (errorMessage != null) {
-            Text(
-                text = "Error: $errorMessage",
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-        }
-
         movieDetails?.let { movie ->
             MovieDetailDisplay(movie = movie)
             Spacer(modifier = Modifier.height(16.dp))
@@ -248,7 +237,13 @@ fun SearchMoviesScreen(
             ) {
                 Text("Save Movie to Database")
             }
-        }
+        } ?: SearchStateDisplay(
+            isLoading = isLoading,
+            errorMessage = errorMessage,
+            emptySearchMessage = "Search for a movie by title to see details",
+            searchPerformed = searchPerformed,
+            hasResults = movieDetails != null
+        )
     }
 }
 

@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.sameerasw.moview.components.MoviePoster
 import com.sameerasw.moview.components.SearchField
+import com.sameerasw.moview.components.SearchStateDisplay
 import com.sameerasw.moview.data.Movie
 import com.sameerasw.moview.data.MovieDatabase
 import com.sameerasw.moview.ui.theme.MoviewTheme
@@ -94,22 +95,19 @@ fun SearchActorsScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Display results
-        if (isLoading) {
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        } else if (searchPerformed) {
-            if (moviesResult.isNotEmpty()) {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(moviesResult) { movie ->
-                        MovieActorItem(movie = movie)
-                    }
+        if (moviesResult.isNotEmpty()) {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(moviesResult) { movie ->
+                    MovieActorItem(movie = movie)
                 }
-            } else {
-                // not found
-                Text("No movies found for '$searchText'")
             }
+        } else {
+            SearchStateDisplay(
+                isLoading = isLoading,
+                emptySearchMessage = "Search for an actor to find their movies",
+                searchPerformed = searchPerformed,
+                hasResults = moviesResult.isNotEmpty()
+            )
         }
     }
 }
