@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.sameerasw.moview.components.MoviePoster
 import com.sameerasw.moview.data.Movie
 import com.sameerasw.moview.data.MovieDatabase
 import com.sameerasw.moview.ui.theme.MoviewTheme
@@ -261,19 +262,31 @@ fun SearchMoviesScreen(
 
 @Composable
 fun MovieDetailDisplay(movie: Movie) {
-    // Display retrieved movie details
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(movie.title ?: "No Title", style = MaterialTheme.typography.headlineSmall)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            MoviePoster(
+                posterUrl = movie.poster,
+                modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
+            )
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(movie.title ?: "No Title", style = MaterialTheme.typography.headlineSmall)
+                DetailRow("Year:", movie.year)
+                DetailRow("Rated:", movie.rated)
+                DetailRow("Released:", movie.released)
+                DetailRow("Runtime:", movie.runtime)
+                DetailRow("IMDb Rating:", movie.imdbRating)
+            }
+        }
+
         Spacer(modifier = Modifier.height(8.dp))
-        DetailRow("Year:", movie.year)
-        DetailRow("Rated:", movie.rated)
-        DetailRow("Released:", movie.released)
-        DetailRow("Runtime:", movie.runtime)
         DetailRow("Genre:", movie.genre)
         DetailRow("Director:", movie.director)
         DetailRow("Writer:", movie.writer)
         DetailRow("Actors:", movie.actors)
-        DetailRow("IMDb Rating:", movie.imdbRating)
         Spacer(modifier = Modifier.height(8.dp))
         Text("Plot:", style = MaterialTheme.typography.titleMedium)
         Text(movie.plot ?: "N/A")

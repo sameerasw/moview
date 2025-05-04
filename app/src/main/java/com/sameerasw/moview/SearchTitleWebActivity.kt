@@ -1,7 +1,6 @@
 package com.sameerasw.moview
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -33,6 +32,8 @@ import java.net.URL
 import java.net.URLEncoder
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import com.sameerasw.moview.components.MoviePoster
+import com.sameerasw.moview.utils.ImageLoader
 
 // to hold search results
 data class WebSearchResult(
@@ -226,21 +227,6 @@ fun SearchTitleWebScreen(
 
 @Composable
 fun SearchResultItem(result: WebSearchResult) {
-    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var imageLoaded by remember { mutableStateOf(false) }
-    val posterUrl = result.poster
-    val coroutineScope = rememberCoroutineScope()
-
-    // Load poster image
-    LaunchedEffect(posterUrl) {
-        if (!posterUrl.isNullOrEmpty() && posterUrl != "N/A") {
-            coroutineScope.launch {
-                bitmap = downloadBitmap(posterUrl)
-                imageLoaded = true
-            }
-        }
-    }
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -252,54 +238,45 @@ fun SearchResultItem(result: WebSearchResult) {
             )
     ) {
         // Display poster as background
+        val bitmap = ImageLoader.loadPosterImage(result.poster)
         bitmap?.let { image ->
             Image(
                 bitmap = image.asImageBitmap(),
                 contentDescription = null,
                 modifier = Modifier
                     .matchParentSize()
-                    .alpha(0.5f),
+                    .alpha(0.3f),
                 contentScale = ContentScale.Crop
             )
         }
 
-        // Movie details
-        Column(
+        // Movie details with poster
+        Row(
             modifier = Modifier
                 .padding(16.dp)
-                .fillMaxWidth()
-                .align(Alignment.BottomStart)
+                .fillMaxSize(),
+            verticalAlignment = Alignment.Bottom
         ) {
-            Text(
-                result.title ?: "No Title",
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleMedium
+            MoviePoster(
+                posterUrl = result.poster,
+                modifier = Modifier.size(80.dp, 120.dp)
             )
-            Text(
-                "Year: ${result.year ?: "N/A"}, Type: ${result.type ?: "N/A"}",
-                style = MaterialTheme.typography.bodyMedium
-            )
+
+            Column(
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .weight(1f)
+            ) {
+                Text(
+                    result.title ?: "No Title",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    "Year: ${result.year ?: "N/A"}, Type: ${result.type ?: "N/A"}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
     }
 }
-
-// download image bitmaps
-private suspend fun downloadBitmap(url: String): Bitmap? {
-    return withContext(Dispatchers.IO) {
-        try {
-            val connection = URL(url).openConnection() as HttpURLConnection
-            connection.doInput = true
-            connection.connect()
-            val inputStream = connection.inputStream
-            BitmapFactory.decodeStream(inputStream)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
-}
-
-// Out of scope references helped with fetchign and displaying images:
-// BitmapFactory: https://developer.android.com/reference/android/graphics/BitmapFactory
-// ImageView.setImageBitmap(): https://developer.android.com/reference/android/widget/ImageView#setImageBitmap(android.graphics.Bitmap)
-// https://stackoverflow.com/questions/2471935/how-to-load-an-imageview-by-url-in-android

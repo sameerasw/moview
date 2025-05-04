@@ -12,6 +12,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.sameerasw.moview.components.MoviePoster
 import com.sameerasw.moview.data.Movie
 import com.sameerasw.moview.data.MovieDatabase
 import com.sameerasw.moview.ui.theme.MoviewTheme
@@ -110,10 +111,28 @@ fun SearchActorsScreen(
 
 @Composable
 fun MovieActorItem(movie: Movie) {
-    Column(modifier = Modifier.padding(vertical = 8.dp)) {
-        Text(text = movie.title ?: "No Title", style = MaterialTheme.typography.titleMedium)
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(text = "Year: ${movie.year ?: "N/A"}")
-        Text(text = "Actors: ${movie.actors ?: "N/A"}")
+    Row(
+        modifier = Modifier
+            .padding(vertical = 8.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        MoviePoster(
+            posterUrl = movie.poster,
+            modifier = Modifier.size(100.dp, 150.dp)
+        )
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = movie.title ?: "No Title", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = "Year: ${movie.year ?: "N/A"}")
+            Text(text = "Actors: ${movie.actors ?: "N/A"}")
+            if (!movie.genre.isNullOrEmpty()) {
+                Text(text = "Genre: ${movie.genre}")
+            }
+            if (!movie.imdbRating.isNullOrEmpty()) {
+                Text(text = "Rating: ${movie.imdbRating}")
+            }
+        }
     }
 }
