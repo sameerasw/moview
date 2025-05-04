@@ -111,7 +111,6 @@ fun SearchActorsScreen(
             onValueChange = { searchText = it },
             onSearch = { performSearch() },
             label = "Actor Name",
-            buttonText = "Search",
             enabled = !isLoading,
             modifier = Modifier.padding(16.dp)
         )

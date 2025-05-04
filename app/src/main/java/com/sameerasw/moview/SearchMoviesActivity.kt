@@ -247,7 +247,6 @@ fun SearchMoviesScreen(
             onValueChange = { searchText = it },
             onSearch = { performSearch() },
             label = "Movie Title",
-            buttonText = "Retrieve Movie",
             enabled = !isLoading,
             modifier = Modifier.padding(16.dp)
         )

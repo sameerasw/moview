@@ -216,8 +216,7 @@ fun SearchTitleWebScreen(
             value = searchText,
             onValueChange = { searchText = it },
             onSearch = { performSearch() },
-            label = "Search Term (e.g., 'matrix', 'dark knight')",
-            buttonText = "Search",
+            label = "Title, Keywords",
             enabled = !isLoading,
             modifier = Modifier.padding(16.dp)
         )

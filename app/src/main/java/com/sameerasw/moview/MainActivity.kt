@@ -410,7 +410,7 @@ fun MainMenuButton(
         Button(
             onClick = onClick,
             modifier = Modifier.size(100.dp),
-            shape = MaterialTheme.shapes.medium,
+            shape = MaterialTheme.shapes.extraLarge,
             contentPadding = PaddingValues(16.dp)
         ) {
             Icon(
