@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -37,6 +38,7 @@ import java.net.URL
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.ui.res.painterResource
 
 class MainActivity : ComponentActivity() {
 
@@ -269,31 +271,60 @@ fun MainScreen(onAddMoviesClicked: () -> Unit, onClearDatabaseClicked: () -> Uni
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Main content - buttons
-                Button(onClick = onAddMoviesClicked) {
-                    Text("Add Movies to DB")
-                }
-                Spacer(modifier = Modifier.height(16.dp))
                 val context = LocalContext.current
-                Button(onClick = {
-                    val intent = Intent(context, SearchMoviesActivity::class.java)
-                    context.startActivity(intent)
-                }) {
-                    Text("Search for Movies")
+
+                // Grid of feature buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    // Add Movies button
+                    MainMenuButton(
+                        icon = R.drawable.ic_add_movies,
+                        label = "Add Movies",
+                        onClick = onAddMoviesClicked
+                    )
+
+                    Spacer(modifier = Modifier.width(24.dp))
+
+                    // Search Movies button
+                    MainMenuButton(
+                        icon = R.drawable.ic_search_movies,
+                        label = "Search Movies",
+                        onClick = {
+                            val intent = Intent(context, SearchMoviesActivity::class.java)
+                            context.startActivity(intent)
+                        }
+                    )
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = {
-                    val intent = Intent(context, SearchActorsActivity::class.java)
-                    context.startActivity(intent)
-                }) {
-                    Text("Search for Actors")
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = {
-                    val intent = Intent(context, SearchTitleWebActivity::class.java)
-                    context.startActivity(intent)
-                }) {
-                    Text("Search Title (Web)")
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    // Search Actors button
+                    MainMenuButton(
+                        icon = R.drawable.ic_search_actors,
+                        label = "Search Actors",
+                        onClick = {
+                            val intent = Intent(context, SearchActorsActivity::class.java)
+                            context.startActivity(intent)
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.width(24.dp))
+
+                    // Search Web button
+                    MainMenuButton(
+                        icon = R.drawable.ic_search_web,
+                        label = "Search Web",
+                        onClick = {
+                            val intent = Intent(context, SearchTitleWebActivity::class.java)
+                            context.startActivity(intent)
+                        }
+                    )
                 }
             }
 
@@ -384,5 +415,35 @@ fun MainScreen(onAddMoviesClicked: () -> Unit, onClearDatabaseClicked: () -> Uni
                 }
             )
         }
+    }
+}
+
+@Composable
+fun MainMenuButton(
+    icon: Int,
+    label: String,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Button(
+            onClick = onClick,
+            modifier = Modifier.size(100.dp),
+            shape = MaterialTheme.shapes.medium,
+            contentPadding = PaddingValues(16.dp)
+        ) {
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = label,
+                modifier = Modifier.size(48.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }
