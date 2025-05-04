@@ -34,6 +34,9 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 
 class MainActivity : ComponentActivity() {
 
@@ -250,70 +253,77 @@ fun MainScreen(onAddMoviesClicked: () -> Unit, onClearDatabaseClicked: () -> Uni
     var showConfirmDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(WindowInsets.systemBars
-                .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
-                .asPaddingValues())
-            .padding(16.dp)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Button(onClick = onAddMoviesClicked) {
-                Text("Add Movies to DB")
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            val context = LocalContext.current
-            Button(onClick = {
-                val intent = Intent(context, SearchMoviesActivity::class.java)
-                context.startActivity(intent)
-            }) {
-                Text("Search for Movies")
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = {
-                val intent = Intent(context, SearchActorsActivity::class.java)
-                context.startActivity(intent)
-            }) {
-                Text("Search for Actors")
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = {
-                val intent = Intent(context, SearchTitleWebActivity::class.java)
-                context.startActivity(intent)
-            }) {
-                Text("Search Title (Web)")
-            }
+    Scaffold(
+        topBar = {
+            MoviewTopBar(title = "Moview")
         }
-
-        Row(
+    ) { innerPadding ->
+        Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp)
         ) {
-            Button(
-                onClick = { showConfirmDialog = true },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer
-                )
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Text("Reset Database")
+                // Main content - buttons
+                Button(onClick = onAddMoviesClicked) {
+                    Text("Add Movies to DB")
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                val context = LocalContext.current
+                Button(onClick = {
+                    val intent = Intent(context, SearchMoviesActivity::class.java)
+                    context.startActivity(intent)
+                }) {
+                    Text("Search for Movies")
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = {
+                    val intent = Intent(context, SearchActorsActivity::class.java)
+                    context.startActivity(intent)
+                }) {
+                    Text("Search for Actors")
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = {
+                    val intent = Intent(context, SearchTitleWebActivity::class.java)
+                    context.startActivity(intent)
+                }) {
+                    Text("Search Title (Web)")
+                }
             }
 
-            OutlinedButton(
-                onClick = { showAboutDialog = true }
+            // Bottom buttons - footer
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("About")
+                Button(
+                    onClick = { showConfirmDialog = true },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                ) {
+                    Text("Reset Database")
+                }
+
+                OutlinedButton(
+                    onClick = { showAboutDialog = true }
+                ) {
+                    Text("About")
+                }
             }
         }
 
+        // Dialogs
         if (showConfirmDialog) {
             AlertDialog(
                 onDismissRequest = { showConfirmDialog = false },
