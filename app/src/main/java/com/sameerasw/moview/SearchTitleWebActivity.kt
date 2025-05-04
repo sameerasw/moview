@@ -32,6 +32,8 @@ import java.net.URL
 import java.net.URLEncoder
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import com.sameerasw.moview.components.MoviePoster
 import com.sameerasw.moview.components.SearchField
 import com.sameerasw.moview.components.SearchStateDisplay
@@ -247,6 +249,22 @@ fun SearchResultItem(result: WebSearchResult) {
             )
         }
 
+        // Add dark gradient overlay from bottom to top
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.background.copy(alpha = 0.7f),
+                            Color.Transparent
+                        ),
+                        startY = Float.POSITIVE_INFINITY,
+                        endY = 0f
+                    )
+                )
+        )
+
         // Movie details with poster
         Row(
             modifier = Modifier
@@ -267,7 +285,7 @@ fun SearchResultItem(result: WebSearchResult) {
                 Text(
                     result.title ?: "No Title",
                     fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
