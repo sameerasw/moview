@@ -8,17 +8,18 @@ import androidx.room.Query
 @Dao
 interface MovieDao {
 
-    // --- Add this method ---
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMovie(movie: Movie) // For saving single movie (Task 4)
+    suspend fun insertMovie(movie: Movie)
 
-    // Keep existing methods
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMovies(movies: List<Movie>) // For initial load (Task 2)
+    suspend fun insertMovies(movies: List<Movie>)
 
     @Query("SELECT * FROM movies WHERE LOWER(actors) LIKE '%' || LOWER(:actorName) || '%'")
-    suspend fun findMoviesByActor(actorName: String): List<Movie> // For Task 5
+    suspend fun findMoviesByActor(actorName: String): List<Movie>
 
     @Query("SELECT * FROM movies")
-    suspend fun getAllMovies(): List<Movie> // For verification/debugging
+    suspend fun getAllMovies(): List<Movie>
+
+    @Query("DELETE FROM movies")
+    suspend fun deleteAllMovies()
 }

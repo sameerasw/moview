@@ -1,16 +1,24 @@
 package com.sameerasw.moview
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -26,6 +34,9 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 
 class MainActivity : ComponentActivity() {
 
@@ -45,7 +56,8 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     MainScreen(
-                        onAddMoviesClicked = { addInitialMoviesToDb() }
+                        onAddMoviesClicked = { addInitialMoviesToDb() },
+                        onClearDatabaseClicked = { clearMoviesDatabase() }
                     )
                 }
             }
@@ -99,6 +111,33 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun clearMoviesDatabase() {
+        lifecycleScope.launch {
+            try {
+                // Delete all movies
+                withContext(Dispatchers.IO) {
+                    movieDao.deleteAllMovies()
+                }
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Movie database cleared",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                println("Successfully cleared the movie database")
+            } catch (e: Exception) {
+                // Show error
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_LONG)
+                        .show()
+                }
+                println("Error clearing database: ${e.message}")
+                e.printStackTrace()
+            }
+        }
+    }
+
     private suspend fun fetchAndParseMovies(urlString: String): List<Movie> = withContext(Dispatchers.IO) {
         val movies = mutableListOf<Movie>()
         var connection: HttpURLConnection? = null
@@ -144,7 +183,7 @@ class MainActivity : ComponentActivity() {
                 } else {
                     val colonIndex = trimmedLine.indexOf(':')
                     if (colonIndex != -1) {
-                        //key - value
+                        //key - valuue
                         if (currentKey != null && currentValue.isNotEmpty()) {
                             currentMovieData[currentKey] = currentValue.toString().trim().removeSurrounding("\"")
                         }
@@ -210,41 +249,140 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(onAddMoviesClicked: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(WindowInsets.systemBars
-                .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
-                .asPaddingValues())
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Button(onClick = onAddMoviesClicked) {
-            Text("Add Movies to DB")
+fun MainScreen(onAddMoviesClicked: () -> Unit, onClearDatabaseClicked: () -> Unit) {
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
+
+    Scaffold(
+        topBar = {
+            MoviewTopBar(title = "Moview")
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        val context = LocalContext.current
-        Button(onClick = {
-            val intent = Intent(context, SearchMoviesActivity::class.java)
-            context.startActivity(intent)
-        }) {
-            Text("Search for Movies")
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                // Main content - buttons
+                Button(onClick = onAddMoviesClicked) {
+                    Text("Add Movies to DB")
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                val context = LocalContext.current
+                Button(onClick = {
+                    val intent = Intent(context, SearchMoviesActivity::class.java)
+                    context.startActivity(intent)
+                }) {
+                    Text("Search for Movies")
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = {
+                    val intent = Intent(context, SearchActorsActivity::class.java)
+                    context.startActivity(intent)
+                }) {
+                    Text("Search for Actors")
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = {
+                    val intent = Intent(context, SearchTitleWebActivity::class.java)
+                    context.startActivity(intent)
+                }) {
+                    Text("Search Title (Web)")
+                }
+            }
+
+            // Bottom buttons - footer
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Button(
+                    onClick = { showConfirmDialog = true },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                ) {
+                    Text("Reset Database")
+                }
+
+                OutlinedButton(
+                    onClick = { showAboutDialog = true }
+                ) {
+                    Text("About")
+                }
+            }
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {
-            val intent = Intent(context, SearchActorsActivity::class.java)
-            context.startActivity(intent)
-        }) {
-            Text("Search for Actors")
+
+        // Dialogs
+        if (showConfirmDialog) {
+            AlertDialog(
+                onDismissRequest = { showConfirmDialog = false },
+                title = { Text("Confirm Reset") },
+                text = { Text("Are you sure you want to clear all movies from the database? This action cannot be undone.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            onClearDatabaseClicked()
+                            showConfirmDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    ) {
+                        Text("Reset")
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = { showConfirmDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {
-            val intent = Intent(context, SearchTitleWebActivity::class.java)
-            context.startActivity(intent)
-        }) {
-            Text("Search Title (Web)")
+
+        if (showAboutDialog) {
+            val context = LocalContext.current
+            AlertDialog(
+                onDismissRequest = { showAboutDialog = false },
+                title = { Text("About Moview") },
+                text = {
+                    Text(
+                        "Developed by Sameera Wijerathna.\n\n" +
+                                "Moview is a movie database application that allows users to search and save movie information. " +
+                                "The app uses the OMDb API to fetch movie details.\n\n" +
+                                "I confirm that I understand what plagiarism is and have read and " +
+                                "understood the section on Assessment Offences in the Essential Information for Students. " +
+                                "The work that I have submitted is entirely my own. Any work from other authors " +
+                                "is duly referenced and acknowledged.",
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
+                },
+                dismissButton = {
+                    Button(onClick = {
+                        val githubUrl = "https://github.com/sameerasw"
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
+                        context.startActivity(intent)
+                    }) {
+                        Text("GitHub")
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = { showAboutDialog = false }) {
+                        Text("OK")
+                    }
+                }
+            )
         }
     }
 }

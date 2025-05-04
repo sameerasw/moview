@@ -139,12 +139,31 @@ fun SearchMoviesScreen(
     saveAction: suspend (Movie) -> Boolean
 ) {
     var searchText by rememberSaveable { mutableStateOf("") }
-    var movieDetails by rememberSaveable { mutableStateOf<Movie?>(null) }
-    var isLoading by rememberSaveable { mutableStateOf(false) }
-    var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    var lastSearchedTerm by rememberSaveable { mutableStateOf("") } // saved to refetch after rotation
+
+    var movieDetails by remember { mutableStateOf<Movie?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val composableScope = rememberCoroutineScope()
     val context = LocalContext.current
+
+    // Effect to re-fetch data
+    LaunchedEffect(Unit) {
+        if (lastSearchedTerm.isNotBlank()) {
+            isLoading = true
+            errorMessage = null
+            movieDetails = null
+
+            val result = searchAction(lastSearchedTerm)
+            isLoading = false
+            result.onSuccess { movie ->
+                movieDetails = movie
+            }.onFailure { error ->
+                errorMessage = error.message ?: "Unknown error fetching movie"
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -170,6 +189,9 @@ fun SearchMoviesScreen(
             Button(
                 onClick = {
                     if (searchText.isNotBlank() && apiKey != "YOUR_API_KEY") {
+                        // Save the search term
+                        lastSearchedTerm = searchText
+
                         isLoading = true
                         errorMessage = null
                         movieDetails = null
