@@ -1,9 +1,13 @@
 package com.sameerasw.moview
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,6 +16,9 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.sameerasw.moview.ui.theme.MoviewTheme
@@ -24,13 +31,15 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 
 // to hold search results
 data class WebSearchResult(
     val title: String?,
     val year: String?,
-    val type: String?
-    // TODO: Add image/ poster later
+    val type: String?,
+    val poster: String?
 )
 
 class SearchTitleWebActivity : ComponentActivity() {
@@ -106,7 +115,8 @@ class SearchTitleWebActivity : ComponentActivity() {
                             WebSearchResult(
                                 title = movieObject.optString("Title", null),
                                 year = movieObject.optString("Year", null),
-                                type = movieObject.optString("Type", null)
+                                type = movieObject.optString("Type", null),
+                                poster = movieObject.optString("Poster", null)
                             )
                         )
                     }
@@ -216,10 +226,80 @@ fun SearchTitleWebScreen(
 
 @Composable
 fun SearchResultItem(result: WebSearchResult) {
-    Row(modifier = Modifier.padding(vertical = 8.dp)) {
-        Column {
-            Text(result.title ?: "No Title", fontWeight = FontWeight.Bold)
-            Text("Year: ${result.year ?: "N/A"}, Type: ${result.type ?: "N/A"}")
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var imageLoaded by remember { mutableStateOf(false) }
+    val posterUrl = result.poster
+    val coroutineScope = rememberCoroutineScope()
+
+    // Load poster image
+    LaunchedEffect(posterUrl) {
+        if (!posterUrl.isNullOrEmpty() && posterUrl != "N/A") {
+            coroutineScope.launch {
+                bitmap = downloadBitmap(posterUrl)
+                imageLoaded = true
+            }
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .height(180.dp)
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(8.dp)
+            )
+    ) {
+        // Display poster as background
+        bitmap?.let { image ->
+            Image(
+                bitmap = image.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier
+                    .matchParentSize()
+                    .alpha(0.5f),
+                contentScale = ContentScale.Crop
+            )
+        }
+
+        // Movie details
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+                .align(Alignment.BottomStart)
+        ) {
+            Text(
+                result.title ?: "No Title",
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                "Year: ${result.year ?: "N/A"}, Type: ${result.type ?: "N/A"}",
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
+
+// download image bitmaps
+private suspend fun downloadBitmap(url: String): Bitmap? {
+    return withContext(Dispatchers.IO) {
+        try {
+            val connection = URL(url).openConnection() as HttpURLConnection
+            connection.doInput = true
+            connection.connect()
+            val inputStream = connection.inputStream
+            BitmapFactory.decodeStream(inputStream)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+}
+
+// Out of scope references helped with fetchign and displaying images:
+// BitmapFactory: https://developer.android.com/reference/android/graphics/BitmapFactory
+// ImageView.setImageBitmap(): https://developer.android.com/reference/android/widget/ImageView#setImageBitmap(android.graphics.Bitmap)
+// https://stackoverflow.com/questions/2471935/how-to-load-an-imageview-by-url-in-android
