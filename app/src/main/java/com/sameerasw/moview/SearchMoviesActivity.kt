@@ -13,6 +13,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.sameerasw.moview.components.MoviePoster
@@ -218,17 +219,21 @@ fun SearchMoviesScreen(
                         onClick = {
                             composableScope.launch {
                                 val success = saveAction(movie)
-                                withContext(Dispatchers.Main) {
-                                    if (success) {
-                                        Toast.makeText(context, "${movie.title} saved to database", Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        Toast.makeText(context, "Error saving movie", Toast.LENGTH_SHORT).show()
-                                    }
+                                if (success) {
+                                    Toast.makeText(context, "${movie.title} saved to database", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "Error saving movie", Toast.LENGTH_SHORT).show()
                                 }
                             }
                         },
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_save),
+                            contentDescription = "Save",
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text("Save Movie to Database")
                     }
                 }
