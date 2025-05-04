@@ -33,6 +33,7 @@ object ImageLoader {
 
     @Composable
     fun loadPosterImage(posterUrl: String?): Bitmap? {
+        // remember the bitmap to avoid reloading
         var bitmap by remember { mutableStateOf<Bitmap?>(null) }
 
         LaunchedEffect(posterUrl) {

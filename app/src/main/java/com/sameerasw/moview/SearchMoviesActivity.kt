@@ -1,6 +1,7 @@
 package com.sameerasw.moview
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -62,7 +63,7 @@ class SearchMoviesActivity : ComponentActivity() {
         }
     }
 
-    // Fetches movie details
+    // Fetches moviie details, suspend is used to call this function from a coroutine
     private suspend fun fetchMovieFromApi(title: String, key: String): Result<Movie> = withContext(Dispatchers.IO) {
         val encodedTitle = URLEncoder.encode(title, "UTF-8")
         val urlString = "https://www.omdbapi.com/?t=$encodedTitle&apikey=$key"
@@ -82,7 +83,7 @@ class SearchMoviesActivity : ComponentActivity() {
                 val inputStream = connection.inputStream
                 reader = BufferedReader(InputStreamReader(inputStream))
                 val response = reader.readText()
-                println("OMDb Response: $response")
+                Log.d("OMDb Response", response)
 
                 val jsonObject = JSONObject(response)
 
@@ -106,7 +107,7 @@ class SearchMoviesActivity : ComponentActivity() {
                     imdbRating = jsonObject.optString("imdbRating", null),
                     type = jsonObject.optString("Type", null)
                 )
-                println("Parsed Movie: $movie")
+                Log.d("Parsed Movie", movie.toString())
                 return@withContext Result.success(movie)
 
             } else {
@@ -114,7 +115,7 @@ class SearchMoviesActivity : ComponentActivity() {
             }
 
         } catch (e: Exception) {
-            println("Error fetching/parsing OMDb: ${e.message}")
+            Log.e("Error fetching/parsing OMDb", e.message ?: "Unknown error")
             e.printStackTrace()
             return@withContext Result.failure(e)
         } finally {
@@ -129,9 +130,9 @@ class SearchMoviesActivity : ComponentActivity() {
             movieDao.insertMovie(movie)
             return@withContext true
         } catch (e: Exception) {
-            println("Error saving movie to DB: ${e.message}")
+            Log.e("Error saving movie to DB", e.message ?: "Unknown error")
             e.printStackTrace()
-            return@withContext false
+            return@withContext false // return false if an error occurs
         }
     }
 }
@@ -210,6 +211,7 @@ fun SearchMoviesScreen(
                 .padding(top = 16.dp, bottom = 0.dp, start = 16.dp, end = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            // Display movie details or search state
             movieDetails?.let { movie ->
                 Column {
                     MovieDetailDisplay(movie = movie)

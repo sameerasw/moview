@@ -83,7 +83,7 @@ fun AboutDialog(
                 IconButton(onClick = {
                     val githubUrl = "https://github.com/$githubUsername"
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
-                    context.startActivity(intent)
+                    context.startActivity(intent) // Open GitHub profile in browser
                 }) {
                     Icon(
                         painter = painterResource(id = R.drawable.github),

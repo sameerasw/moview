@@ -1,9 +1,10 @@
 package com.sameerasw.moview
 
+import android.content.ContentValues.TAG
 import android.content.Intent
 import android.content.res.Configuration
-import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -46,7 +47,7 @@ import com.sameerasw.moview.components.AboutDialog
 class MainActivity : ComponentActivity() {
 
     private val movieDao by lazy {
-        MovieDatabase.getDatabase(applicationContext).movieDao()
+        MovieDatabase.getDatabase(applicationContext).movieDao() // Lazy initialization of the DAO
     }
 
     // URL specified
@@ -144,6 +145,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private suspend fun fetchAndParseMovies(urlString: String): List<Movie> = withContext(Dispatchers.IO) {
+        // Fetch and parse movies from the given API URL
         val movies = mutableListOf<Movie>()
         var connection: HttpURLConnection? = null
         var reader: BufferedReader? = null
@@ -160,7 +162,7 @@ class MainActivity : ComponentActivity() {
             connection.connect()
 
             val inputStream = connection.inputStream
-            reader = BufferedReader(InputStreamReader(inputStream))
+            reader = BufferedReader(InputStreamReader(inputStream)) // Read the response
             var line: String?
 
             while (reader.readLine().also { line = it } != null) {
@@ -173,12 +175,12 @@ class MainActivity : ComponentActivity() {
 
                     if (currentMovieData.isNotEmpty()) {
                         try {
-                            println("Attempting to create movie from map: $currentMovieData")
+                            Log.d(TAG, "fetchAndParseMovies: Attempting to create movie from map: $currentMovieData")
                             val movie = createMovieFromMap(currentMovieData)
                             movies.add(movie)
-                            println("Successfully created movie: ${movie.title}")
+                            Log.d(TAG, "fetchAndParseMovies: Successfully created movie: ${movie.title}")
                         } catch (e: Exception) {
-                            println("Error creating movie from map: ${e.message} - Data: $currentMovieData")
+                            Log.e(TAG, "Error creating movie from map: ${e.message} - Data: $currentMovieData")
                         }
                         currentMovieData.clear()
                     }
@@ -202,7 +204,7 @@ class MainActivity : ComponentActivity() {
                             if (currentValue.isNotEmpty()) currentValue.append(" ")
                             currentValue.append(trimmedLine)
                         } else {
-                            println("Skipping line with no colon and no current key: $trimmedLine")
+                            Log.d(TAG, "Skipping line with no colon and no current key: $trimmedLine")
                         }
                     }
                 }
@@ -213,24 +215,24 @@ class MainActivity : ComponentActivity() {
             }
             if (currentMovieData.isNotEmpty()) {
                 try {
-                    println("Attempting to create LAST movie from map: $currentMovieData")
+                    Log.d(TAG, "Attempting to create LAST movie from map: $currentMovieData")
                     val movie = createMovieFromMap(currentMovieData)
                     movies.add(movie)
-                    println("Successfully created LAST movie: ${movie.title}")
+                    Log.d(TAG, "Successfully created LAST movie: ${movie.title}")
                 } catch (e: Exception) {
-                    println("Error creating LAST movie from map: ${e.message} - Data: $currentMovieData")
+                    Log.e(TAG, "Error creating LAST movie from map: ${e.message} - Data: $currentMovieData")
                 }
             }
 
         } catch (e: Exception) {
-            println("Error during network fetch or reading: ${e.message}")
+            Log.e(TAG, "Error during network fetch or reading: ${e.message}")
             e.printStackTrace()
             return@withContext emptyList<Movie>()
         } finally {
             reader?.close()
             connection?.disconnect()
         }
-        println("Finished Parsing. Total movies parsed successfully: ${movies.size}")
+        Log.d(TAG, "Finished Parsing. Total movies parsed successfully: ${movies.size}")
         return@withContext movies
     }
 
@@ -261,9 +263,7 @@ fun MainScreen(onAddMoviesClicked: () -> Unit, onClearDatabaseClicked: () -> Uni
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     Scaffold(
-        topBar = {
-            MoviewTopBar(title = "Moview")
-        }
+        topBar = {}
     ) { innerPadding ->
         Box(
             modifier = Modifier

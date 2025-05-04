@@ -2,6 +2,7 @@ package com.sameerasw.moview
 
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -102,7 +103,7 @@ class SearchTitleWebActivity : ComponentActivity() {
                 val inputStream = connection.inputStream
                 reader = BufferedReader(InputStreamReader(inputStream))
                 val response = reader.readText()
-                println("OMDb Substring Search Response: $response")
+                Log.d("OMDb Search", "Response: $response")
 
                 val jsonObject = JSONObject(response)
 
@@ -126,7 +127,7 @@ class SearchTitleWebActivity : ComponentActivity() {
                         )
                     }
                 }
-                println("Parsed ${results.size} results.")
+                Log.d("OMDb Search", "Parsed ${results.size} results.")
                 return@withContext Result.success(results)
 
             } else {
@@ -134,7 +135,7 @@ class SearchTitleWebActivity : ComponentActivity() {
             }
 
         } catch (e: Exception) {
-            println("Error during OMDb substring search: ${e.message}")
+            Log.e("OMDb Search", "Error during search", e)
             e.printStackTrace()
             return@withContext Result.failure(e)
         } finally {
@@ -248,14 +249,14 @@ fun SearchResultItem(result: WebSearchResult) {
             )
         }
 
-        // Add dark gradient overlay from bottom to top
         Box(
+            // A gradient overlay to make text readable
             modifier = Modifier
                 .matchParentSize()
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.background.copy(alpha = 0.7f),
+                            MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
                             Color.Transparent
                         ),
                         startY = Float.POSITIVE_INFINITY,

@@ -28,6 +28,7 @@ fun SearchStateDisplay(
     hasResults: Boolean = false
 ) {
     when {
+        // Loading state
         isLoading -> {
             Box(
                 modifier = Modifier
@@ -38,6 +39,7 @@ fun SearchStateDisplay(
                 CircularProgressIndicator()
             }
         }
+        // Error state
         errorMessage != null -> {
             Box(
                 modifier = Modifier
@@ -63,6 +65,7 @@ fun SearchStateDisplay(
                 }
             }
         }
+        // Empty state
         !searchPerformed && !hasResults -> {
             Box(
                 modifier = Modifier
@@ -90,6 +93,7 @@ fun SearchStateDisplay(
                 }
             }
         }
+        // No results state
         searchPerformed && !hasResults -> {
             Box(
                 modifier = Modifier
