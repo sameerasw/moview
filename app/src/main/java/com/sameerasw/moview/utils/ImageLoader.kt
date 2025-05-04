@@ -50,3 +50,5 @@ object ImageLoader {
 // BitmapFactory: https://developer.android.com/reference/android/graphics/BitmapFactory
 // ImageView.setImageBitmap(): https://developer.android.com/reference/android/widget/ImageView#setImageBitmap(android.graphics.Bitmap)
 // https://stackoverflow.com/questions/2471935/how-to-load-an-imageview-by-url-in-android
+
+// personal notes - https://sameerasw.notion.site/Images-fetching-in-Jetpack-w-o-3rd-party-libs-1e99c6099d40801ebf49f65dd50d9d02?pvs=4

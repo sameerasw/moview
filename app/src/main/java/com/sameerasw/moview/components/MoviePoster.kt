@@ -66,6 +66,7 @@ fun MoviePoster(
     }
 }
 
+// personal notes - https://sameerasw.notion.site/Images-fetching-in-Jetpack-w-o-3rd-party-libs-1e99c6099d40801ebf49f65dd50d9d02?pvs=4
 
 // Out of scope references helped with fetchign and displaying images:
 // BitmapFactory: https://developer.android.com/reference/android/graphics/BitmapFactory
