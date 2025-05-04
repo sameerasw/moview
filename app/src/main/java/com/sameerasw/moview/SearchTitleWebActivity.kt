@@ -1,9 +1,12 @@
 package com.sameerasw.moview
 
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,6 +15,9 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.sameerasw.moview.ui.theme.MoviewTheme
@@ -24,13 +30,21 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import com.sameerasw.moview.components.MoviePoster
+import com.sameerasw.moview.components.SearchField
+import com.sameerasw.moview.components.SearchStateDisplay
+import com.sameerasw.moview.utils.ImageLoader
 
 // to hold search results
 data class WebSearchResult(
     val title: String?,
     val year: String?,
-    val type: String?
-    // TODO: Add image/ poster later
+    val type: String?,
+    val poster: String?
 )
 
 class SearchTitleWebActivity : ComponentActivity() {
@@ -106,7 +120,8 @@ class SearchTitleWebActivity : ComponentActivity() {
                             WebSearchResult(
                                 title = movieObject.optString("Title", null),
                                 year = movieObject.optString("Year", null),
-                                type = movieObject.optString("Type", null)
+                                type = movieObject.optString("Type", null),
+                                poster = movieObject.optString("Poster", null)
                             )
                         )
                     }
@@ -142,84 +157,141 @@ fun SearchTitleWebScreen(
 
     val composableScope = rememberCoroutineScope()
 
+    val performSearch = {
+        if (searchText.isNotBlank() && apiKey != "YOUR_API_KEY") {
+            isLoading = true
+            searchPerformed = true
+            errorMessage = null
+            searchResults = emptyList() // Clear previous results
+            composableScope.launch {
+                val result = searchAction(searchText)
+                isLoading = false
+                result.onSuccess { results ->
+                    searchResults = results
+                }.onFailure { error ->
+                    errorMessage = error.message ?: "Unknown search error"
+                }
+            }
+        } else if (apiKey == "YOUR_API_KEY") {
+            errorMessage = "Please set your OMDb API key."
+        } else {
+            errorMessage = "Please enter a search term."
+        }
+    }
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(WindowInsets.systemBars
                 .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
                 .asPaddingValues())
-            .padding(16.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        // Content area
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(top = 16.dp, bottom = 0.dp, start = 16.dp, end = 16.dp)
         ) {
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = { searchText = it },
-                label = { Text("Search Term (e.g., 'matrix', 'dark knight')") },
-                modifier = Modifier.weight(1f),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(
-                onClick = {
-                    isLoading = true
-                    searchPerformed = true
-                    errorMessage = null
-                    searchResults = emptyList() // Clear previous results
-                    composableScope.launch {
-                        val result = searchAction(searchText)
-                        isLoading = false
-                        result.onSuccess { results ->
-                            searchResults = results
-                        }.onFailure { error ->
-                            errorMessage = error.message ?: "Unknown search error"
-                        }
-                    }
-                },
-                enabled = !isLoading && searchText.isNotBlank() && apiKey != "YOUR_API_KEY"
-            ) {
-                Text("Search")
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        when {
-            isLoading -> {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
-            errorMessage != null -> {
-                Text(
-                    text = "Error: $errorMessage",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-            searchPerformed && searchResults.isEmpty() -> {
-                // Empty
-                Text("No results found for '$searchText'.")
-            }
-            searchResults.isNotEmpty() -> {
-                // Display Results
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
+            if (searchResults.isNotEmpty()) {
+                LazyColumn {
                     items(searchResults) { result ->
                         SearchResultItem(result = result)
                     }
                 }
+            } else {
+                SearchStateDisplay(
+                    isLoading = isLoading,
+                    errorMessage = errorMessage,
+                    emptySearchMessage = "Search for movies online by title keywords",
+                    searchPerformed = searchPerformed,
+                    hasResults = searchResults.isNotEmpty()
+                )
             }
         }
+
+        // Search bar
+        SearchField(
+            value = searchText,
+            onValueChange = { searchText = it },
+            onSearch = { performSearch() },
+            label = "Title, Keywords",
+            enabled = !isLoading,
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
 
 @Composable
 fun SearchResultItem(result: WebSearchResult) {
-    Row(modifier = Modifier.padding(vertical = 8.dp)) {
-        Column {
-            Text(result.title ?: "No Title", fontWeight = FontWeight.Bold)
-            Text("Year: ${result.year ?: "N/A"}, Type: ${result.type ?: "N/A"}")
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .height(180.dp)
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(8.dp)
+            )
+    ) {
+        // Display poster as background
+        val bitmap = ImageLoader.loadPosterImage(result.poster)
+        bitmap?.let { image ->
+            Image(
+                bitmap = image.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier
+                    .matchParentSize()
+                    .alpha(0.3f),
+                contentScale = ContentScale.Crop
+            )
+        }
+
+        // Add dark gradient overlay from bottom to top
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.background.copy(alpha = 0.7f),
+                            Color.Transparent
+                        ),
+                        startY = Float.POSITIVE_INFINITY,
+                        endY = 0f
+                    )
+                )
+        )
+
+        // Movie details with poster
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxSize(),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            MoviePoster(
+                posterUrl = result.poster,
+                modifier = Modifier.size(80.dp, 120.dp)
+            )
+
+            Column(
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .weight(1f)
+            ) {
+                Text(
+                    result.title ?: "No Title",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    "Year: ${result.year ?: "N/A"}, Type: ${result.type ?: "N/A"}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
     }
 }
