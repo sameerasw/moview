@@ -132,7 +132,7 @@ fun MovieActorItem(movie: Movie) {
         )
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = movie.title ?: "No Title", style = MaterialTheme.typography.titleMedium)
+            Text(text = movie.title ?: "No Title", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = "Year: ${movie.year ?: "N/A"}")
             Text(text = "Actors: ${movie.actors ?: "N/A"}")

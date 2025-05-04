@@ -267,7 +267,7 @@ fun MovieDetailDisplay(movie: Movie) {
             )
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(movie.title ?: "No Title", style = MaterialTheme.typography.headlineSmall)
+                Text(movie.title ?: "No Title", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
                 DetailRow("Year:", movie.year)
                 DetailRow("Rated:", movie.rated)
                 DetailRow("Released:", movie.released)

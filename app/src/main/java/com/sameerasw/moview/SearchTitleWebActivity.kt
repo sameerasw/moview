@@ -267,7 +267,8 @@ fun SearchResultItem(result: WebSearchResult) {
                 Text(
                     result.title ?: "No Title",
                     fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
                     "Year: ${result.year ?: "N/A"}, Type: ${result.type ?: "N/A"}",

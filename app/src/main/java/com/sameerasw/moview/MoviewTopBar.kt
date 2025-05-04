@@ -37,7 +37,8 @@ fun MoviewTopBar(title: String = "Dicing") {
                             vertical = 8.dp
                         )
                         .size(64.dp)
-                        .scale(1.5f)
+                        .scale(1.5f),
+                    tint = Color(MaterialTheme.colorScheme.primary.value)
                 )
                 Text(
                     text = title,
