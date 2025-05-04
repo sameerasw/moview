@@ -39,6 +39,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.res.painterResource
+import com.sameerasw.moview.components.AboutDialog
 
 class MainActivity : ComponentActivity() {
 
@@ -382,37 +383,15 @@ fun MainScreen(onAddMoviesClicked: () -> Unit, onClearDatabaseClicked: () -> Uni
             )
         }
 
+        // about me
         if (showAboutDialog) {
-            val context = LocalContext.current
-            AlertDialog(
+            AboutDialog(
                 onDismissRequest = { showAboutDialog = false },
-                title = { Text("About Moview") },
-                text = {
-                    Text(
-                        "Developed by Sameera Wijerathna.\n\n" +
-                                "Moview is a movie database application that allows users to search and save movie information. " +
-                                "The app uses the OMDb API to fetch movie details.\n\n" +
-                                "I confirm that I understand what plagiarism is and have read and " +
-                                "understood the section on Assessment Offences in the Essential Information for Students. " +
-                                "The work that I have submitted is entirely my own. Any work from other authors " +
-                                "is duly referenced and acknowledged.",
-                        modifier = Modifier.padding(top = 16.dp)
-                    )
-                },
-                dismissButton = {
-                    Button(onClick = {
-                        val githubUrl = "https://github.com/sameerasw"
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
-                        context.startActivity(intent)
-                    }) {
-                        Text("GitHub")
-                    }
-                },
-                confirmButton = {
-                    Button(onClick = { showAboutDialog = false }) {
-                        Text("OK")
-                    }
-                }
+                appName = "Moview",
+                developerName = "Sameera Wijerathna",
+                description = "Moview is a movie database application that allows users to search and save movie information. " +
+                        "The app uses the OMDb API to fetch movie details.",
+                githubUsername = "sameerasw"
             )
         }
     }
