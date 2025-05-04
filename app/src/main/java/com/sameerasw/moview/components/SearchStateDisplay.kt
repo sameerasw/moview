@@ -50,10 +50,10 @@ fun SearchStateDisplay(
                 ) {
                     Text(
                         text = "\uD83E\uDD14",
-                        style = MaterialTheme.typography.headlineLarge,
+                        style = MaterialTheme.typography.displayMedium,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "$errorMessage, Are you sure you typed it correctly?",
                         color = MaterialTheme.colorScheme.error,
@@ -77,9 +77,9 @@ fun SearchStateDisplay(
                         painter = painterResource(id = R.drawable.ic_search_list),
                         contentDescription = "Search",
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(64.dp)
+                        modifier = Modifier.size(100.dp)
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                     Text(
                         text = emptySearchMessage,
                         style = MaterialTheme.typography.bodyLarge,
@@ -102,10 +102,10 @@ fun SearchStateDisplay(
                 ) {
                     Text(
                         text = "🔍",
-                        style = MaterialTheme.typography.headlineLarge,
+                        style = MaterialTheme.typography.displayMedium,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "No results found",
                         style = MaterialTheme.typography.bodyLarge,

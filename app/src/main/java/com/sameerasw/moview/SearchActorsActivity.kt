@@ -81,34 +81,40 @@ fun SearchActorsScreen(
             .padding(WindowInsets.systemBars
                 .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
                 .asPaddingValues())
-            .padding(16.dp)
     ) {
+        // Content area
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(top = 16.dp, bottom = 0.dp, start = 16.dp, end = 16.dp)
+        ) {
+            if (moviesResult.isNotEmpty()) {
+                LazyColumn {
+                    items(moviesResult) { movie ->
+                        MovieActorItem(movie = movie)
+                    }
+                }
+            } else {
+                SearchStateDisplay(
+                    isLoading = isLoading,
+                    emptySearchMessage = "Search for an actor to find their movies",
+                    searchPerformed = searchPerformed,
+                    hasResults = moviesResult.isNotEmpty()
+                )
+            }
+        }
+
+        // Search bar
         SearchField(
             value = searchText,
             onValueChange = { searchText = it },
             onSearch = { performSearch() },
             label = "Actor Name",
             buttonText = "Search",
-            enabled = !isLoading
+            enabled = !isLoading,
+            modifier = Modifier.padding(16.dp)
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Display results
-        if (moviesResult.isNotEmpty()) {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(moviesResult) { movie ->
-                    MovieActorItem(movie = movie)
-                }
-            }
-        } else {
-            SearchStateDisplay(
-                isLoading = isLoading,
-                emptySearchMessage = "Search for an actor to find their movies",
-                searchPerformed = searchPerformed,
-                hasResults = moviesResult.isNotEmpty()
-            )
-        }
     }
 }
 

@@ -177,40 +177,48 @@ fun SearchTitleWebScreen(
         }
     }
 
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(WindowInsets.systemBars
                 .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
                 .asPaddingValues())
-            .padding(16.dp)
     ) {
+        // Content area
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(top = 16.dp, bottom = 0.dp, start = 16.dp, end = 16.dp)
+        ) {
+            if (searchResults.isNotEmpty()) {
+                LazyColumn {
+                    items(searchResults) { result ->
+                        SearchResultItem(result = result)
+                    }
+                }
+            } else {
+                SearchStateDisplay(
+                    isLoading = isLoading,
+                    errorMessage = errorMessage,
+                    emptySearchMessage = "Search for movies online by title keywords",
+                    searchPerformed = searchPerformed,
+                    hasResults = searchResults.isNotEmpty()
+                )
+            }
+        }
+
+        // Search bar
         SearchField(
             value = searchText,
             onValueChange = { searchText = it },
             onSearch = { performSearch() },
             label = "Search Term (e.g., 'matrix', 'dark knight')",
             buttonText = "Search",
-            enabled = !isLoading
+            enabled = !isLoading,
+            modifier = Modifier.padding(16.dp)
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (searchResults.isNotEmpty()) {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(searchResults) { result ->
-                    SearchResultItem(result = result)
-                }
-            }
-        } else {
-            SearchStateDisplay(
-                isLoading = isLoading,
-                errorMessage = errorMessage,
-                emptySearchMessage = "Search for movies online by title keywords",
-                searchPerformed = searchPerformed,
-                hasResults = searchResults.isNotEmpty()
-            )
-        }
     }
 }
 

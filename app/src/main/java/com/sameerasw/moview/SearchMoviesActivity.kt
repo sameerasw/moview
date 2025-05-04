@@ -143,7 +143,6 @@ fun SearchMoviesScreen(
 ) {
     var searchText by rememberSaveable { mutableStateOf("") }
     var lastSearchedTerm by rememberSaveable { mutableStateOf("") }
-
     var movieDetails by remember { mutableStateOf<Movie?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -172,9 +171,7 @@ fun SearchMoviesScreen(
 
     val performSearch = {
         if (searchText.isNotBlank() && apiKey != "YOUR_API_KEY") {
-            // Save the search term
             lastSearchedTerm = searchText
-
             isLoading = true
             errorMessage = null
             movieDetails = null
@@ -196,53 +193,63 @@ fun SearchMoviesScreen(
         }
     }
 
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(WindowInsets.systemBars
                 .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
                 .asPaddingValues())
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState())
     ) {
+        // Content area
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(top = 16.dp, bottom = 0.dp, start = 16.dp, end = 16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            movieDetails?.let { movie ->
+                Column {
+                    MovieDetailDisplay(movie = movie)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = {
+                            composableScope.launch {
+                                val success = saveAction(movie)
+                                withContext(Dispatchers.Main) {
+                                    if (success) {
+                                        Toast.makeText(context, "${movie.title} saved to database", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "Error saving movie", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text("Save Movie to Database")
+                    }
+                }
+            } ?: SearchStateDisplay(
+                isLoading = isLoading,
+                errorMessage = errorMessage,
+                emptySearchMessage = "Search for a movie by title to see details",
+                searchPerformed = searchPerformed,
+                hasResults = movieDetails != null
+            )
+        }
+
+        // Search bar
         SearchField(
             value = searchText,
             onValueChange = { searchText = it },
             onSearch = { performSearch() },
             label = "Movie Title",
             buttonText = "Retrieve Movie",
-            enabled = !isLoading
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        movieDetails?.let { movie ->
-            MovieDetailDisplay(movie = movie)
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = {
-                    composableScope.launch {
-                        val success = saveAction(movie)
-                        withContext(Dispatchers.Main) {
-                            if (success) {
-                                Toast.makeText(context, "${movie.title} saved to database", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(context, "Error saving movie", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    }
-                },
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Text("Save Movie to Database")
-            }
-        } ?: SearchStateDisplay(
-            isLoading = isLoading,
-            errorMessage = errorMessage,
-            emptySearchMessage = "Search for a movie by title to see details",
-            searchPerformed = searchPerformed,
-            hasResults = movieDetails != null
+            enabled = !isLoading,
+            modifier = Modifier.padding(16.dp)
         )
     }
 }
