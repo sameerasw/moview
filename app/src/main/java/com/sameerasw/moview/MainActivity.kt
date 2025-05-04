@@ -263,7 +263,9 @@ fun MainScreen(onAddMoviesClicked: () -> Unit, onClearDatabaseClicked: () -> Uni
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     Scaffold(
-        topBar = {}
+        topBar = {
+            MoviewTopBar()
+        }
     ) { innerPadding ->
         Box(
             modifier = Modifier
