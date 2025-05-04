@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.sameerasw.moview.components.MoviePoster
+import com.sameerasw.moview.components.SearchField
 import com.sameerasw.moview.data.Movie
 import com.sameerasw.moview.data.MovieDatabase
 import com.sameerasw.moview.ui.theme.MoviewTheme
@@ -140,7 +141,7 @@ fun SearchMoviesScreen(
     saveAction: suspend (Movie) -> Boolean
 ) {
     var searchText by rememberSaveable { mutableStateOf("") }
-    var lastSearchedTerm by rememberSaveable { mutableStateOf("") } // saved to refetch after rotation
+    var lastSearchedTerm by rememberSaveable { mutableStateOf("") }
 
     var movieDetails by remember { mutableStateOf<Movie?>(null) }
     var isLoading by remember { mutableStateOf(false) }
@@ -166,6 +167,31 @@ fun SearchMoviesScreen(
         }
     }
 
+    val performSearch = {
+        if (searchText.isNotBlank() && apiKey != "YOUR_API_KEY") {
+            // Save the search term
+            lastSearchedTerm = searchText
+
+            isLoading = true
+            errorMessage = null
+            movieDetails = null
+
+            composableScope.launch {
+                val result = searchAction(searchText)
+                isLoading = false
+                result.onSuccess { movie ->
+                    movieDetails = movie
+                }.onFailure { error ->
+                    errorMessage = error.message ?: "Unknown error fetching movie"
+                }
+            }
+        } else if (apiKey == "YOUR_API_KEY") {
+            errorMessage = "Please set your OMDb API key."
+        } else {
+            errorMessage = "Please enter a movie title."
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -175,48 +201,14 @@ fun SearchMoviesScreen(
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = { searchText = it },
-                label = { Text("Movie Title") },
-                modifier = Modifier.weight(1f),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(
-                onClick = {
-                    if (searchText.isNotBlank() && apiKey != "YOUR_API_KEY") {
-                        // Save the search term
-                        lastSearchedTerm = searchText
-
-                        isLoading = true
-                        errorMessage = null
-                        movieDetails = null
-                        composableScope.launch {
-                            val result = searchAction(searchText)
-                            isLoading = false
-                            result.onSuccess { movie ->
-                                movieDetails = movie
-                            }.onFailure { error ->
-                                errorMessage = error.message ?: "Unknown error fetching movie"
-                            }
-                        }
-                    } else if (apiKey == "YOUR_API_KEY") {
-                        errorMessage = "Please set your OMDb API key."
-                    }
-                    else {
-                        errorMessage = "Please enter a movie title."
-                    }
-                },
-                enabled = !isLoading
-            ) {
-                Text("Retrieve Movie")
-            }
-        }
+        SearchField(
+            value = searchText,
+            onValueChange = { searchText = it },
+            onSearch = { performSearch() },
+            label = "Movie Title",
+            buttonText = "Retrieve Movie",
+            enabled = !isLoading
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -296,7 +288,7 @@ fun MovieDetailDisplay(movie: Movie) {
 @Composable
 fun DetailRow(label: String, value: String?) {
     Row(modifier = Modifier.padding(vertical = 2.dp)) {
-        Text(label, fontWeight = FontWeight.Bold, modifier = Modifier.width(100.dp))
+        Text(label, fontWeight = FontWeight.Bold, modifier = Modifier.width(100.dp)) // fixed width to align the labels
         Text(value ?: "N/A")
     }
 }

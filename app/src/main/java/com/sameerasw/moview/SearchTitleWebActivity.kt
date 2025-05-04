@@ -33,6 +33,7 @@ import java.net.URLEncoder
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import com.sameerasw.moview.components.MoviePoster
+import com.sameerasw.moview.components.SearchField
 import com.sameerasw.moview.utils.ImageLoader
 
 // to hold search results
@@ -153,6 +154,28 @@ fun SearchTitleWebScreen(
 
     val composableScope = rememberCoroutineScope()
 
+    val performSearch = {
+        if (searchText.isNotBlank() && apiKey != "YOUR_API_KEY") {
+            isLoading = true
+            searchPerformed = true
+            errorMessage = null
+            searchResults = emptyList() // Clear previous results
+            composableScope.launch {
+                val result = searchAction(searchText)
+                isLoading = false
+                result.onSuccess { results ->
+                    searchResults = results
+                }.onFailure { error ->
+                    errorMessage = error.message ?: "Unknown search error"
+                }
+            }
+        } else if (apiKey == "YOUR_API_KEY") {
+            errorMessage = "Please set your OMDb API key."
+        } else {
+            errorMessage = "Please enter a search term."
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -161,39 +184,14 @@ fun SearchTitleWebScreen(
                 .asPaddingValues())
             .padding(16.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = { searchText = it },
-                label = { Text("Search Term (e.g., 'matrix', 'dark knight')") },
-                modifier = Modifier.weight(1f),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(
-                onClick = {
-                    isLoading = true
-                    searchPerformed = true
-                    errorMessage = null
-                    searchResults = emptyList() // Clear previous results
-                    composableScope.launch {
-                        val result = searchAction(searchText)
-                        isLoading = false
-                        result.onSuccess { results ->
-                            searchResults = results
-                        }.onFailure { error ->
-                            errorMessage = error.message ?: "Unknown search error"
-                        }
-                    }
-                },
-                enabled = !isLoading && searchText.isNotBlank() && apiKey != "YOUR_API_KEY"
-            ) {
-                Text("Search")
-            }
-        }
+        SearchField(
+            value = searchText,
+            onValueChange = { searchText = it },
+            onSearch = { performSearch() },
+            label = "Search Term (e.g., 'matrix', 'dark knight')",
+            buttonText = "Search",
+            enabled = !isLoading
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 

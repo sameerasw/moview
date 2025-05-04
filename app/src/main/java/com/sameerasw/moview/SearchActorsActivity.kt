@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.sameerasw.moview.components.MoviePoster
+import com.sameerasw.moview.components.SearchField
 import com.sameerasw.moview.data.Movie
 import com.sameerasw.moview.data.MovieDatabase
 import com.sameerasw.moview.ui.theme.MoviewTheme
@@ -58,8 +59,20 @@ fun SearchActorsScreen(
     var searchText by rememberSaveable { mutableStateOf("") }
     var moviesResult by rememberSaveable { mutableStateOf<List<Movie>>(emptyList()) }
     var searchPerformed by rememberSaveable { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
 
     val composableScope = rememberCoroutineScope()
+
+    val performSearch = {
+        if (searchText.isNotBlank()) {
+            searchPerformed = true
+            isLoading = true
+            composableScope.launch {
+                moviesResult = searchAction(searchText)
+                isLoading = false
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -69,32 +82,24 @@ fun SearchActorsScreen(
                 .asPaddingValues())
             .padding(16.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = { searchText = it },
-                label = { Text("Actor Name") },
-                modifier = Modifier.weight(1f),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = {
-                searchPerformed = true
-                composableScope.launch {
-                    moviesResult = searchAction(searchText)
-                }
-            }) {
-                Text("Search")
-            }
-        }
+        SearchField(
+            value = searchText,
+            onValueChange = { searchText = it },
+            onSearch = { performSearch() },
+            label = "Actor Name",
+            buttonText = "Search",
+            enabled = !isLoading
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Display results
-        if (searchPerformed) {
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        } else if (searchPerformed) {
             if (moviesResult.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(moviesResult) { movie ->
