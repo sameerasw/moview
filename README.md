@@ -33,7 +33,7 @@ Follow these steps to set up and run the project:
     ├── app/                     # Main application directory
     │   ├── src/                 # Source files
     │   │   ├── main/            # Main application code
-    │   │   │   ├── java/      # Kotlin source files
+    │   │   │   ├── java/        # Kotlin source files
     │   │   │   ├── res/         # UI resources (layouts, drawables, etc.)
     │   ├── build.gradle         # Gradle configuration for the app
     ├── build.gradle             # Root Gradle configuration
