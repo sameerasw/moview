@@ -68,15 +68,3 @@ For any inquiries or feedback, feel free to reach out:
 
 - **GitHub**: [@sameerasw](https://github.com/sameerasw)  
 - **Email**: mail@sameerasw.com
-
-
-
-Here’s a detailed README template tailored for your repository. You can copy and customize it according to your needs:
-
----
-
-# 🎥 MovieW - Your Movie Database Android Application
-
-[![Kotlin](https://img.shields.io/badge/Kotlin-100%25-blue)](https://kotlinlang.org/)
-[![GitHub License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-
